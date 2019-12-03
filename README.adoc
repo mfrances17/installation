@@ -59,71 +59,38 @@ These products include:
 
 == Installation Steps
 
-The following will provide information on how to install Integreatly on a openshift cluster via an bastion host.
+The following will provide information on how to install Integreatly on a openshift cluster via a master host.
 
 
-#### 1. Sign into your bastion host and become root of the host
+#### 1. Sign into your master host and become root of the host
 
 [source,shell]
 
 ```
-ssh -i /path/ocpkey.pem ec2-user@bastion.NAME-GUID.openshiftworkshop.com
+ssh -i /path/ocpkey.pem ec2-user@master.NAME-GUID.openshiftworkshop.com
 
 sudo -i
 ```
 
 
-#### 2. Clone installation GIT repository on the bastion host
+#### 2. Clone installation GIT repository on the master host
 
 [source,shell]
 ```
 git clone https://github.com/integr8ly/installation.git
 ```
 
-#### 3. Obtain your openshift master hostname using the following command
+#### 4. Create the inventory file
 
+Depending on the environment you're installing into, there are different pre-existing inventory files that can be used for installation.
 
-__NOTE__: This hostname will be needed in a following step to allow connection to your cluster
+Usually, when manually running an installation, the `inventories/pds.template` file is the inventory that should be used. The default contents of this file can normally be used without modification when running from the master host.
 
-[source,shell]
+Create a copy of he `inventories/pds.template` template, in case it needs to be modified:
 
 ```
-oc get nodes
+cp inventories/pds.template inventories/pds
 ```
-
-#### 4. Create the inventory hosts file
-
-. Create the host file based on the template(`../inventories/hosts.default`) located in the inventories directory.
-+
-[source,shell]
-----
-cp inventories/hosts.template inventories/hosts
-----
-. Update the hosts file master field with the master hostname from the previous step.
-+
-
-[source]
-----
-~/installation/inventories/hosts
-
-[local:vars]
-ansible_connection=local
-
-run_master_tasks=true
-
-[local]
-127.0.0.1
-
-[OSEv3:children]
-master
-
-[OSEv3:vars]
-ansible_user=ec2-user
-
-[master]
-127.0.0.1
-----
-
 
 #### 5. Check the connection with the OpenShift cluster
 
@@ -206,7 +173,7 @@ By default Mobile Developer Services will not be installed. In order to install 
 
 [source,shell]
 ----
- ansible-playbook -i inventories/hosts playbooks/install.yml -e github_client_id=<your_client-id> -e github_client_secret=<your_client_secret>
+ ansible-playbook -i inventories/pds playbooks/install.yml -e github_client_id=<your_client-id> -e github_client_secret=<your_client_secret>
 ----
 
 
@@ -227,7 +194,7 @@ The following command installs Integreatly without GitHub authorization for Laun
 
 [source,shell]
 ----
-$ ansible-playbook -i inventories/hosts playbooks/install.yml
+$ ansible-playbook -i inventories/pds playbooks/install.yml
 ----
 ====
 
@@ -296,7 +263,7 @@ IMPORTANT: The default login credentials are `admin@example.com` / `Password1`
 Run the uninstall.yml playbook from the root of the repository:
 [source,shell]
 ----
-$ ansible-playbook -i inventories/hosts playbooks/uninstall.yml
+$ ansible-playbook -i inventories/pds playbooks/uninstall.yml
 ----
 
 By default this will delete all user-created namespaces as well, if you wish to keep these namespaces then add the following flag:
@@ -326,7 +293,7 @@ The issue means that python version used by Ansible has not this required module
 $ pip install jsonpointer
 ----
 
-Also, you might need to use the varible `ansible_python_interpreter` in the host file to fix it, for example:
+Also, you might need to use the varible `ansible_python_interpreter` in the inventory file being used to fix it, for example:
 
 [source,yum]
 ----
